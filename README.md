@@ -1,8 +1,8 @@
-# Socketeer
+# React Socketeer
 
 A powerful React library for Socket.IO integration that provides seamless real-time communication features including rooms, private messaging, and user management.
 
-[![NPM Version](https://img.shields.io/npm/v/socketeer)](https://www.npmjs.com/package/socketeer)
+[![NPM Version](https://img.shields.io/npm/v/react-socketeer)](https://www.npmjs.com/package/react-socketeer)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Table of Contents
@@ -46,9 +46,9 @@ A powerful React library for Socket.IO integration that provides seamless real-t
 ## Installation
 
 ```bash
-npm install socketeer socket.io-client
+npm install react-socketeer socket.io-client
 # or
-yarn add socketeer socket.io-client
+yarn add react-socketeer socket.io-client
 ```
 
 ## Local Development
@@ -58,8 +58,8 @@ yarn add socketeer socket.io-client
 1. First, clone and set up the library:
    ```bash
    # Clone the repository
-   git clone https://github.com/yourusername/socketeer
-   cd socketeer
+   git clone https://github.com/edafeoke/react-socketeer
+   cd react-socketeer
 
    # Install all dependencies including development dependencies
    npm install
