@@ -46,7 +46,7 @@ export default [
     },
     external: ['commander', 'fs/promises', 'path', 'url', 'child_process'],
     plugins: [
-      typescript(),
+      typescript({ tsconfig: './tsconfig.json' }),
       json()
     ]
   }
