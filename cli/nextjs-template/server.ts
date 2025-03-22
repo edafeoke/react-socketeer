@@ -1,7 +1,14 @@
 export const serverTemplate = `import { createServer } from 'http'
 import { parse } from 'url'
 import next from 'next'
-import { Server as SocketIOServer } from 'socket.io'
+import { Server as SocketIOServer, Socket } from 'socket.io'
+
+// Extend the Socket interface to add our custom properties
+declare module 'socket.io' {
+  interface Socket {
+    username?: string;
+  }
+}
 
 const dev = process.env.NODE_ENV !== 'production'
 const hostname = 'localhost'
