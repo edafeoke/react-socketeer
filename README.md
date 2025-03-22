@@ -12,6 +12,7 @@ A powerful React library for Socket.IO integration that provides seamless real-t
 - [Installation](#installation)
 - [Local Development](#local-development)
 - [Quick Start](#quick-start)
+- [Next.js Integration](#nextjs-integration)
 - [Server Setup](#server-setup)
 - [API Reference](#api-reference)
 - [Advanced Examples](#advanced-examples)
@@ -176,7 +177,6 @@ httpServer.listen(4000, () => {
 The easiest way to integrate react-socketeer with Next.js is using our CLI tool:
 
 ```bash
-Install the library
 npm install react-socketeer socket.io-client
 Run the setup command
 npx react-socketeer setup-nextjs

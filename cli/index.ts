@@ -4,9 +4,9 @@ import { program } from 'commander'
 import fs from 'fs/promises'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { serverTemplate } from './nextjs-template/server.ts'
-import { providerTemplate, chatComponentTemplate } from './nextjs-template/components.ts'
-import { tsconfigServerTemplate } from './nextjs-template/tsconfig.ts'
+import { serverTemplate } from './nextjs-template/server'
+import { providerTemplate, chatComponentTemplate } from './nextjs-template/components'
+import { tsconfigServerTemplate } from './nextjs-template/tsconfig'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
