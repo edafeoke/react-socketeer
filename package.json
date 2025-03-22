@@ -1,6 +1,6 @@
 {
   "name": "react-socketeer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A React library for socket.io integration with rooms, private messaging, and user management/authentication",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
@@ -10,7 +10,7 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "rollup -c rollup.config.mjs",
+    "build": "rollup -c rollup.config.mjs && chmod +x dist/cli/index.js",
     "dev": "rollup -c rollup.config.mjs -w",
     "test": "jest",
     "prepublishOnly": "npm run build"
@@ -45,7 +45,8 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "socket.io-client": "^4.0.0"
+    "socket.io-client": "^4.0.0",
+    "commander": "^11.0.0"
   },
   "repository": {
     "type": "git",
@@ -54,5 +55,8 @@
   "bugs": {
     "url": "https://github.com/edafeoke/react-socketeer/issues"
   },
-  "homepage": "https://github.com/edafeoke/react-socketeer#readme"
+  "homepage": "https://github.com/edafeoke/react-socketeer#readme",
+  "bin": {
+    "react-socketeer": "./dist/cli/index.js"
+  }
 }

@@ -35,10 +35,12 @@ A powerful React library for Socket.IO integration that provides seamless real-t
 ## Dependencies
 
 ### Peer Dependencies
+
 - React >=16.8.0
 - Socket.IO Client >=4.0.0
 
 ### Development Dependencies
+
 - TypeScript ^5.0.0
 - Rollup ^3.0.0
 - Jest ^29.0.0
@@ -51,200 +53,10 @@ npm install react-socketeer socket.io-client
 yarn add react-socketeer socket.io-client
 ```
 
-## Local Development
-
-### Testing the Library Locally
-
-1. First, clone and set up the library:
-   ```bash
-   # Clone the repository
-   git clone https://github.com/edafeoke/react-socketeer
-   cd react-socketeer
-
-   # Install all dependencies including development dependencies
-   npm install
-
-   # Install Rollup globally (if you encounter rollup command not found)
-   npm install -g rollup
-
-   # Build the library
-   npm run build
-   ```
-
-2. If you encounter any dependency errors, ensure all required packages are installed:
-   ```bash
-   # Install core dependencies
-   npm install --save-dev rollup @rollup/plugin-node-resolve @rollup/plugin-commonjs
-   npm install --save-dev @rollup/plugin-typescript rollup-plugin-dts
-   npm install --save-dev rollup-plugin-peer-deps-external rollup-plugin-terser
-   npm install --save-dev typescript tslib @types/react
-
-   # Rebuild the library
-   npm run build
-   ```
-
-3. Create a global symlink in your system:
-   ```bash
-   npm link
-   ```
-
-4. Create a test application (if you don't have one):
-   ```bash
-   # In a different directory
-   npx create-react-app test-socketeer --template typescript
-   cd test-socketeer
-   ```
-
-5. Link the library to your test application:
-   ```bash
-   # In your test application directory
-   npm link socketeer
-   
-   # Install peer dependencies
-   npm install socket.io-client
-   
-   # If you get React hooks errors, link React
-   cd node_modules/react
-   npm link
-   cd ../..
-   cd ../socketeer
-   npm link react
-   ```
-
-6. Use the library in your test application:
-   ```tsx
-   // src/App.tsx
-   import React from 'react';
-   import { SocketProvider, useGlobalChat } from 'socketeer';
-   
-   function App() {
-     return (
-       <SocketProvider socketUrl="http://localhost:4000">
-         <Chat />
-       </SocketProvider>
-     );
-   }
-   ```
-
-7. Start the development environment:
-   ```bash
-   # Terminal 1 - Library development (in socketeer directory)
-   npm run dev    # or: npx rollup -c -w
-
-   # Terminal 2 - Test server (in test-socketeer directory)
-   node server.js
-
-   # Terminal 3 - Test application (in test-socketeer directory)
-   npm start
-   ```
-
-### Development Server Setup
-
-For testing the full functionality, you'll need a Socket.IO server. First, install the required dependencies:
-
-```bash
-# In your test-socketeer directory
-npm install express socket.io cors
-```
-
-Create a new file `server.js`:
-
-```javascript
-const express = require('express');
-const { createServer } = require('http');
-const { Server } = require('socket.io');
-const cors = require('cors');
-
-const app = express();
-app.use(cors());
-const httpServer = createServer(app);
-const io = new Server(httpServer, {
-  cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"]
-  }
-});
-
-// Basic server setup for testing
-io.on('connection', (socket) => {
-  console.log('Client connected:', socket.id);
-
-  socket.on('login', (username) => {
-    socket.username = username;
-    io.emit('login_success', { username, id: socket.id });
-    console.log('User logged in:', username);
-  });
-
-  socket.on('send_message', (message) => {
-    io.emit('new_message', {
-      username: socket.username,
-      text: message,
-      timestamp: Date.now()
-    });
-    console.log('Message sent:', message);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
-  });
-});
-
-const PORT = 4000;
-httpServer.listen(PORT, () => {
-  console.log(`Test server running on http://localhost:${PORT}`);
-});
-```
-
-Install server dependencies and start it:
-```bash
-npm install express socket.io cors
-node server.js
-```
-
-### Troubleshooting Local Development
-
-1. **Module not found errors**
-   - Ensure you've run `npm run build` in the library directory
-   - Check if `npm link` was successful
-   - Try removing and relinking: `npm unlink socketeer && npm link socketeer`
-
-2. **React invalid hook call**
-   - This usually happens when you have multiple React versions
-   - Link React from your test app:
-     ```bash
-     cd test-socketeer
-     npm link ../socketeer/node_modules/react
-     ```
-
-3. **Hot reload not working**
-   - Ensure you're running `npm run dev` in the library directory
-   - Check if your test app is set up to watch for changes
-
-4. **Socket connection issues**
-   - Verify the server is running on the correct port
-   - Check CORS settings in the server
-   - Ensure the `socketUrl` matches your server address
-
-### File Structure for Local Development
-
-```
-socketeer/                  # Library root
-├── src/                   # Library source code
-├── dist/                  # Built files
-└── package.json          
-
-test-socketeer/            # Test application
-├── src/
-│   ├── App.tsx           # Test components
-│   └── index.tsx
-├── server.js             # Test server
-└── package.json
-```
-
 ## Quick Start
 
 ```tsx
-import { SocketProvider, useGlobalChat } from 'socketeer';
+import { SocketProvider, useGlobalChat } from "socketeer";
 
 // Wrap your app with the SocketProvider
 function App() {
@@ -258,7 +70,7 @@ function App() {
 // Use the hooks in your components
 function Chat() {
   const { messages, sendMessage, error } = useGlobalChat();
-  
+
   return (
     <div>
       {messages.map((msg) => (
@@ -266,9 +78,7 @@ function Chat() {
           <strong>{msg.username}:</strong> {msg.text}
         </div>
       ))}
-      <button onClick={() => sendMessage("Hello, world!")}>
-        Send Message
-      </button>
+      <button onClick={() => sendMessage("Hello, world!")}>Send Message</button>
     </div>
   );
 }
@@ -279,10 +89,10 @@ function Chat() {
 To use Socketeer, you'll need a Socket.IO server. Here's a basic setup using Express:
 
 ```javascript
-const express = require('express');
-const { createServer } = require('http');
-const { Server } = require('socket.io');
-const cors = require('cors');
+const express = require("express");
+const { createServer } = require("http");
+const { Server } = require("socket.io");
+const cors = require("cors");
 
 const app = express();
 app.use(cors());
@@ -290,72 +100,259 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: "http://localhost:3000", // Your client URL
-    methods: ["GET", "POST"]
-  }
+    methods: ["GET", "POST"],
+  },
 });
 
 // Handle user connections
-io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
 
   // Handle login
-  socket.on('login', (username) => {
+  socket.on("login", (username) => {
     // Validate username and handle login logic
     socket.username = username;
-    io.emit('login_success', { username, id: socket.id });
+    io.emit("login_success", { username, id: socket.id });
   });
 
   // Handle global messages
-  socket.on('send_message', (message) => {
-    io.emit('new_message', {
+  socket.on("send_message", (message) => {
+    io.emit("new_message", {
       username: socket.username,
       text: message,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   });
 
   // Handle room messages
-  socket.on('join_room', (room) => {
+  socket.on("join_room", (room) => {
     socket.join(room);
     // Emit room history
   });
 
-  socket.on('send_room_message', ({ room, message }) => {
-    io.to(room).emit('new_room_message', {
+  socket.on("send_room_message", ({ room, message }) => {
+    io.to(room).emit("new_room_message", {
       room,
       message: {
         username: socket.username,
         text: message,
-        timestamp: Date.now()
-      }
+        timestamp: Date.now(),
+      },
     });
   });
 
   // Handle private messages
-  socket.on('send_private_message', ({ recipient, message }) => {
-    const recipientSocket = Array.from(io.sockets.sockets.values())
-      .find(s => s.username === recipient);
-    
+  socket.on("send_private_message", ({ recipient, message }) => {
+    const recipientSocket = Array.from(io.sockets.sockets.values()).find(
+      (s) => s.username === recipient
+    );
+
     if (recipientSocket) {
-      io.to(recipientSocket.id).emit('new_private_message', {
+      io.to(recipientSocket.id).emit("new_private_message", {
         from: socket.username,
         message: {
           username: socket.username,
           text: message,
-          timestamp: Date.now()
-        }
+          timestamp: Date.now(),
+        },
       });
     }
   });
 
-  socket.on('disconnect', () => {
-    io.emit('user_left', { username: socket.username });
+  socket.on("disconnect", () => {
+    io.emit("user_left", { username: socket.username });
   });
 });
 
 httpServer.listen(4000, () => {
-  console.log('Server running on port 4000');
+  console.log("Server running on port 4000");
 });
+```
+
+## Next.js Integration
+
+### Automatic Setup (Recommended)
+
+The easiest way to integrate react-socketeer with Next.js is using our CLI tool:
+
+```bash
+Install the library
+npm install react-socketeer socket.io-client
+Run the setup command
+npx react-socketeer setup-nextjs
+```
+
+This will automatically:
+
+1. Create a custom server with Socket.IO integration
+2. Set up necessary components and configurations
+3. Install required dependencies
+4. Update your package.json scripts
+
+After the setup completes, update your `app/layout.tsx`:
+
+```tsx
+tsx;
+import { SocketProvider } from "./components/SocketProvider";
+import "./globals.css";
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        <SocketProvider>{children}</SocketProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+Then create your page in `app/page.tsx`:
+
+```tsx
+"use client";
+import { useSocket } from "react-socketeer";
+import { LoginForm, ChatRoom } from "./components/Chat";
+export default function Home() {
+  const { isLoggedIn } = useSocket();
+  return (
+    <main className="container mx-auto max-w-2xl">
+      <h1 className="text-2xl font-bold p-4">React Socketeer Chat</h1>
+      {!isLoggedIn ? <LoginForm /> : <ChatRoom />}
+    </main>
+  );
+}
+```
+
+Finally, start the development server:
+
+```bash
+npm run dev
+```
+
+### Manual Setup
+
+If you prefer to set up manually or need more control, follow these steps:
+
+1. Install dependencies:
+
+```bash
+npm install react-socketeer socket.io-client
+npm install --save-dev ts-node @types/node socket.io @types/socket.io
+```
+
+2. Create a custom server (`server.ts` in project root):
+
+```ts
+import { createServer } from "http";
+import { parse } from "url";
+import next from "next";
+import { Server as SocketIOServer } from "socket.io";
+const dev = process.env.NODE_ENV !== "production";
+const hostname = "localhost";
+const port = 3000;
+const app = next({ dev, hostname, port });
+const handle = app.getRequestHandler();
+app.prepare().then(() => {
+  const server = createServer(async (req, res) => {
+    try {
+      const parsedUrl = parse(req.url!, true);
+      await handle(req, res, parsedUrl);
+    } catch (err) {
+      console.error("Error occurred handling", req.url, err);
+      res.statusCode = 500;
+      res.end("Internal Server Error");
+    }
+  });
+  const io = new SocketIOServer(server, {
+    cors: {
+      origin: "",
+      methods: ["GET", "POST"],
+    },
+  });
+  io.on("connection", (socket) => {
+    console.log("Client connected:", socket.id);
+    socket.on("login", (username) => {
+      socket.username = username;
+      io.emit("login_success", { username, id: socket.id });
+    });
+    socket.on("send_message", (message) => {
+      io.emit("new_message", {
+        username: socket.username,
+        text: message,
+        timestamp: Date.now(),
+      });
+    });
+    socket.on("disconnect", () => {
+      console.log("Client disconnected:", socket.id);
+    });
+  });
+  server.listen(port, () => {
+    console.log("> Ready on http://${hostname}:${port}");
+  });
+});
+```
+
+3. Create `tsconfig.server.json`:
+
+```json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "outDir": "dist",
+    "noEmit": false,
+    "jsx": "react"
+  },
+  "include": ["server.ts"]
+}
+```
+
+4. Update `package.json` scripts:
+
+```json
+{
+  "scripts": {
+    "dev": "ts-node --project tsconfig.server.json server.ts",
+    "build": "next build",
+    "start": "NODE_ENV=production ts-node --project tsconfig.server.json server.ts"
+  }
+}
+```
+
+5. Create a Socket Provider (`app/_components/SocketProvider.tsx`):
+
+```tsx
+"use client";
+import { SocketProvider as BaseSocketProvider } from "react-socketeer";
+export function SocketProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <BaseSocketProvider
+      socketUrl={process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3000"}
+    >
+      {children}
+    </BaseSocketProvider>
+  );
+}
+```
+
+
+6. Update your layout and create pages as shown in the automatic setup section.
+
+### Production Deployment
+
+When deploying to production:
+
+1. Set the `NEXT_PUBLIC_SOCKET_URL` environment variable to your production URL
+2. Configure CORS settings in the server for your production domain
+3. Consider using a process manager like PM2:
+
+```bash
+npm install -g pm2
+pm2 start npm --name "nextjs-socketeer" -- start
 ```
 
 ## API Reference
@@ -373,10 +370,14 @@ interface SocketProviderProps {
 
 <SocketProvider
   socketUrl="http://localhost:3000"
-  socketOptions={{ /* Socket.IO options */ }}
+  socketOptions={
+    {
+      /* Socket.IO options */
+    }
+  }
 >
   {children}
-</SocketProvider>
+</SocketProvider>;
 ```
 
 ### Hooks
@@ -387,17 +388,17 @@ Access the core socket functionality and connection state.
 
 ```tsx
 const {
-  socket,         // Socket.IO instance
-  isConnected,    // boolean
-  username,       // string
-  isLoggedIn,     // boolean
-  users,          // User[]
-  handleLogin,    // (username: string) => void
-  messages,       // Message[]
-  loginError,     // string
-  rooms,          // string[]
-  createRoom,     // (roomName: string) => void
-  roomError       // string
+  socket, // Socket.IO instance
+  isConnected, // boolean
+  username, // string
+  isLoggedIn, // boolean
+  users, // User[]
+  handleLogin, // (username: string) => void
+  messages, // Message[]
+  loginError, // string
+  rooms, // string[]
+  createRoom, // (roomName: string) => void
+  roomError, // string
 } = useSocket();
 ```
 
@@ -406,14 +407,9 @@ const {
 Manage global chat messages.
 
 ```tsx
-const {
-  messages,
-  sendMessage,
-  error,
-  messagesEndRef
-} = useGlobalChat({
+const { messages, sendMessage, error, messagesEndRef } = useGlobalChat({
   autoScroll: true,
-  scrollDelay: 100
+  scrollDelay: 100,
 });
 ```
 
@@ -422,16 +418,13 @@ const {
 Handle room-based communication.
 
 ```tsx
-const {
-  messages,
-  sendMessage,
-  isJoined,
-  error,
-  messagesEndRef
-} = useRoom("my-room", {
-  autoScroll: true,
-  scrollDelay: 100
-});
+const { messages, sendMessage, isJoined, error, messagesEndRef } = useRoom(
+  "my-room",
+  {
+    autoScroll: true,
+    scrollDelay: 100,
+  }
+);
 ```
 
 #### `usePrivateChat(recipient, options?)`
@@ -439,15 +432,13 @@ const {
 Manage private messages with other users.
 
 ```tsx
-const {
-  messages,
-  sendMessage,
-  error,
-  messagesEndRef
-} = usePrivateChat("username", {
-  autoScroll: true,
-  scrollDelay: 100
-});
+const { messages, sendMessage, error, messagesEndRef } = usePrivateChat(
+  "username",
+  {
+    autoScroll: true,
+    scrollDelay: 100,
+  }
+);
 ```
 
 ## Advanced Examples
@@ -455,19 +446,21 @@ const {
 ### Complete Chat Application with Error Handling
 
 ```tsx
-import { SocketProvider, useSocket, useGlobalChat } from 'socketeer';
+import { SocketProvider, useSocket, useGlobalChat } from "socketeer";
 
 function ChatApp() {
   const { isConnected, username, handleLogin, loginError } = useSocket();
   const [inputUsername, setInputUsername] = useState("");
-  
+
   // Login form with error handling
   if (!isConnected || !username) {
     return (
-      <form onSubmit={(e) => {
-        e.preventDefault();
-        handleLogin(inputUsername);
-      }}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleLogin(inputUsername);
+        }}
+      >
         <input
           value={inputUsername}
           onChange={(e) => setInputUsername(e.target.value)}
@@ -475,7 +468,7 @@ function ChatApp() {
         />
         {loginError && <div className="error">{loginError}</div>}
         <button type="submit" disabled={!isConnected}>
-          {isConnected ? 'Login' : 'Connecting...'}
+          {isConnected ? "Login" : "Connecting..."}
         </button>
       </form>
     );
@@ -486,7 +479,7 @@ function ChatApp() {
 
 function Chat() {
   const { messages, sendMessage, error } = useGlobalChat();
-  
+
   return (
     <div>
       {messages.map((msg) => (
@@ -494,9 +487,7 @@ function Chat() {
           <strong>{msg.username}:</strong> {msg.text}
         </div>
       ))}
-      <button onClick={() => sendMessage("Hello, world!")}>
-        Send Message
-      </button>
+      <button onClick={() => sendMessage("Hello, world!")}>Send Message</button>
     </div>
   );
 }
@@ -526,10 +517,10 @@ function RoomManager() {
         <button type="submit">Create Room</button>
       </form>
       {roomError && <div className="error">{roomError}</div>}
-      
+
       <h3>Available Rooms</h3>
       <ul>
-        {rooms.map(room => (
+        {rooms.map((room) => (
           <li key={room}>{room}</li>
         ))}
       </ul>
@@ -591,7 +582,7 @@ You can pass any Socket.IO client options through the `socketOptions` prop of `S
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     timeout: 20000,
-    transports: ['websocket', 'polling']
+    transports: ["websocket", "polling"],
   }}
 >
   {children}
@@ -603,6 +594,7 @@ You can pass any Socket.IO client options through the `socketOptions` prop of `S
 ### Common Issues
 
 1. **Connection Issues**
+
    ```typescript
    // Check if connected
    const { isConnected } = useSocket();
@@ -614,11 +606,13 @@ You can pass any Socket.IO client options through the `socketOptions` prop of `S
    ```
 
 2. **Authentication Errors**
+
    - Ensure `handleLogin` is called before attempting to send messages
    - Check server logs for authentication failures
    - Verify CORS settings on your server
 
 3. **Message Not Received**
+
    - Verify room name matches exactly
    - Check if user is properly joined to room
    - Ensure server is forwarding messages correctly
@@ -637,7 +631,7 @@ Enable debug mode to see detailed logs:
   socketUrl="http://localhost:3000"
   socketOptions={{
     debug: true,
-    logger: console
+    logger: console,
   }}
 >
   {children}
