@@ -59,6 +59,32 @@ async function installDependencies(packageManager: string) {
   execSync(command, { stdio: 'inherit' });
 }
 
+async function detectAppDirectory() {
+  try {
+    const files = await fs.readdir(process.cwd());
+    
+    // Check if src directory exists
+    if (files.includes('src')) {
+      // Check if src/app exists
+      const srcFiles = await fs.readdir(path.join(process.cwd(), 'src'));
+      if (srcFiles.includes('app')) {
+        return path.join('src', 'app');
+      }
+    }
+    
+    // Check if app directory exists at root
+    if (files.includes('app')) {
+      return 'app';
+    }
+    
+    // If neither exists, default to app (will be created)
+    return 'app';
+  } catch (error) {
+    // Default to app in case of any errors
+    return 'app';
+  }
+}
+
 async function setupNextjs(options: { packageManager?: string }) {
   try {
     // Create server file
@@ -67,13 +93,17 @@ async function setupNextjs(options: { packageManager?: string }) {
       serverTemplate
     )
 
+    // Detect app directory structure
+    const appDir = await detectAppDirectory();
+    console.log(`Detected app directory: ${appDir}`);
+
     // Create components
     await createFile(
-      path.join(process.cwd(), 'app/_components/SocketProvider.tsx'),
+      path.join(process.cwd(), `${appDir}/_components/SocketProvider.tsx`),
       providerTemplate
     )
     await createFile(
-      path.join(process.cwd(), 'app/_components/Chat.tsx'),
+      path.join(process.cwd(), `${appDir}/_components/Chat.tsx`),
       chatComponentTemplate
     )
 
@@ -93,7 +123,7 @@ async function setupNextjs(options: { packageManager?: string }) {
 
     console.log('\n✅ Setup completed successfully!')
     console.log('\nNext steps:')
-    console.log('1. Update your app/layout.tsx to include the SocketProvider')
+    console.log(`1. Update your ${appDir}/layout.tsx to include the SocketProvider`)
     console.log('2. Create your pages using the Chat components')
     console.log('3. Run npm run dev to start the development server')
   } catch (error) {
