@@ -46,7 +46,7 @@ app.prepare().then(async () => {
     }
   })
 
-  // Initialize Socket.IO with adapter if configured
+  // Initialize Socket.IO with basic configuration
   const io = new SocketIOServer(server, {
     cors: {
       origin: '*',
@@ -61,41 +61,60 @@ app.prepare().then(async () => {
       console.log(\`Setting up \${adapterConfig.type} adapter...\`);
       
       if (adapterConfig.type === 'redis') {
-        const { createAdapter } = await import('@socket.io/redis-adapter');
-        const { createClient } = await import('redis');
-        
-        const pubClient = createClient(adapterConfig.options || {});
-        const subClient = pubClient.duplicate();
-        
-        await Promise.all([pubClient.connect(), subClient.connect()]);
-        io.adapter(createAdapter(pubClient, subClient));
-        
-        console.log('Redis adapter set up successfully');
+        try {
+          const { createAdapter } = await import('@socket.io/redis-adapter');
+          const { createClient } = await import('redis');
+          
+          const pubClient = createClient(adapterConfig.options || {});
+          const subClient = pubClient.duplicate();
+          
+          await Promise.all([pubClient.connect(), subClient.connect()]);
+          io.adapter(createAdapter(pubClient, subClient));
+          
+          console.log('Redis adapter set up successfully');
+        } catch (error) {
+          console.error('Failed to set up Redis adapter:', error);
+          console.warn('Make sure you have installed required dependencies:');
+          console.warn('npm install @socket.io/redis-adapter redis');
+        }
       } 
       else if (adapterConfig.type === 'mongo' || adapterConfig.type === 'mongodb') {
-        const { createAdapter } = await import('@socket.io/mongo-adapter');
-        const { MongoClient } = await import('mongodb');
-        
-        const mongoClient = new MongoClient(adapterConfig.uri);
-        await mongoClient.connect();
-        
-        const mongoCollection = mongoClient
-          .db(adapterConfig.dbName || 'socketio')
-          .collection(adapterConfig.collection || 'socket.io-adapter-events');
-        
-        io.adapter(createAdapter(mongoCollection));
-        console.log('MongoDB adapter set up successfully');
+        try {
+          const { createAdapter } = await import('@socket.io/mongo-adapter');
+          const { MongoClient } = await import('mongodb');
+          
+          const mongoClient = new MongoClient(adapterConfig.uri);
+          await mongoClient.connect();
+          
+          const mongoCollection = mongoClient
+            .db(adapterConfig.dbName || 'socketio')
+            .collection(adapterConfig.collection || 'socket.io-adapter-events');
+          
+          io.adapter(createAdapter(mongoCollection));
+          console.log('MongoDB adapter set up successfully');
+        } catch (error) {
+          console.error('Failed to set up MongoDB adapter:', error);
+          console.warn('Make sure you have installed required dependencies:');
+          console.warn('npm install @socket.io/mongo-adapter mongodb');
+        }
       }
       else if (adapterConfig.type === 'custom' && adapterConfig.setupFunction) {
-        // For custom adapters, users can provide a setupFunction path
-        const setupModule = await import(adapterConfig.setupFunction);
-        await setupModule.default(io, adapterConfig);
-        console.log('Custom adapter set up successfully');
+        try {
+          // For custom adapters, users can provide a setupFunction path
+          const setupModule = await import(adapterConfig.setupFunction);
+          await setupModule.default(io, adapterConfig);
+          console.log('Custom adapter set up successfully');
+        } catch (error) {
+          console.error('Failed to set up custom adapter:', error);
+          console.warn('Make sure your setup function and dependencies are correctly configured');
+        }
       }
     } catch (error) {
       console.error('Failed to set up adapter:', error);
       console.warn('Falling back to in-memory adapter');
     }
+  } else {
+    console.log('No adapter configured. Using default in-memory adapter.');
   }
 
   io.on('connection', (socket) => {

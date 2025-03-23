@@ -102,6 +102,44 @@ async function loadConfig() {
   }
 }
 
+async function installAdapterDependencies(packageManager: string, adapterConfig: any) {
+  const { execSync } = await import('child_process');
+  
+  let dependencies = '';
+  
+  if (adapterConfig.type === 'redis') {
+    dependencies = '@socket.io/redis-adapter redis';
+  } 
+  else if (adapterConfig.type === 'mongo' || adapterConfig.type === 'mongodb') {
+    dependencies = '@socket.io/mongo-adapter mongodb';
+  }
+  else if (adapterConfig.type === 'postgres' || adapterConfig.type === 'postgresql') {
+    dependencies = '@socket.io/postgres-adapter pg';
+  }
+  else if (adapterConfig.dependencies && Array.isArray(adapterConfig.dependencies)) {
+    dependencies = adapterConfig.dependencies.join(' ');
+  }
+  
+  if (dependencies) {
+    const commands: Record<string, string> = {
+      npm: `npm install ${dependencies} --save`,
+      yarn: `yarn add ${dependencies}`,
+      pnpm: `pnpm add ${dependencies}`
+    };
+
+    const command = commands[packageManager] || commands.npm;
+    console.log(`Installing adapter dependencies with ${packageManager}...`);
+    try {
+      execSync(command, { stdio: 'inherit' });
+      console.log('✅ Adapter dependencies installed successfully');
+    } catch (error) {
+      console.error('Failed to install adapter dependencies:', error);
+      console.warn('You may need to install them manually:');
+      console.warn(`${packageManager} install ${dependencies}`);
+    }
+  }
+}
+
 async function setupNextjs(options: { packageManager?: string }) {
   try {
     // Load user configuration
@@ -140,12 +178,24 @@ async function setupNextjs(options: { packageManager?: string }) {
     const packageManager = options.packageManager || await detectPackageManager();
     console.log('\nInstalling additional dependencies...');
     await installDependencies(packageManager);
+    
+    // Install adapter dependencies if configured
+    if (config.adapter) {
+      console.log('\nInstalling adapter dependencies...');
+      await installAdapterDependencies(packageManager, config.adapter);
+    }
 
     console.log('\n✅ Setup completed successfully!')
     console.log('\nNext steps:')
     console.log(`1. Update your ${appDir}/layout.tsx to include the SocketProvider`)
     console.log('2. Create your pages using the Chat components')
     console.log('3. Run npm run dev to start the development server')
+    
+    if (!config.adapter) {
+      console.log('\nℹ️ To configure a scalable adapter for Socket.IO:')
+      console.log('1. Create a react-socketeer.json file in your project root')
+      console.log('2. Add adapter configuration (see documentation for examples)')
+    }
   } catch (error) {
     console.error('Error during setup:', error)
     process.exit(1)
