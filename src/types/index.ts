@@ -1,40 +1,49 @@
 import { Socket } from "socket.io-client";
+import { ReactNode } from "react";
 
-export interface User {
+// Base user type with required properties
+export interface BaseUser {
   username: string;
   id: string;
   socketId?: string;
 }
 
-export interface Message {
+// Extensible user type that can include additional properties
+export type User<T = {}> = BaseUser & T;
+
+export interface Message<T = {}> {
   username: string;
   text: string;
   timestamp: number;
+  user?: User<T>; // Optional reference to the user who sent the message
 }
 
-export interface SocketContextType {
+export interface SocketConfig {
+  socketUrl?: string;
+  socketOptions?: any;
+}
+
+// Make context type generic as well
+export interface SocketContextType<UserExtension = {}> {
   socket: Socket;
   isConnected: boolean;
   username: string;
   setUsername: (username: string) => void;
   isLoggedIn: boolean;
   setIsLoggedIn: (isLoggedIn: boolean) => void;
-  users: User[];
-  messages: Message[];
+  users: User<UserExtension>[];
+  messages: Message<UserExtension>[];
   loginError: string;
-  handleLogin: (username: string) => void;
+  handleLogin: (username: string, userData?: Partial<UserExtension>) => void;
   rooms: string[];
   createRoom: (roomName: string) => void;
   roomError: string;
 }
 
-export interface SocketProviderProps {
+// Update provider props to support generic extensions
+export interface SocketProviderProps<UserExtension = {}> {
   socketUrl?: string;
   socketOptions?: any;
-  children: React.ReactNode;
-}
-
-export interface SocketConfig {
-  socketUrl?: string;
-  socketOptions?: any;
+  userDataTransformer?: (userData: any) => UserExtension;
+  children: ReactNode;
 }

@@ -207,6 +207,7 @@ npx react-socketeer setup-nextjs [options]
 ```
 
 Available options:
+
 - `-p, --package-manager <manager>`: Specify package manager (npm, yarn, or pnpm)
 
 The CLI tool will automatically:
@@ -562,18 +563,35 @@ function RoomManager() {
 The library exports TypeScript types for better development experience:
 
 ```typescript
-interface User {
+// Base types that can be extended
+interface BaseUser {
   username: string;
   id: string;
   socketId?: string;
 }
 
-interface Message {
+interface BaseMessage {
   username: string;
   text: string;
   timestamp: number;
 }
 
+// Extend the base types with your custom properties
+interface User extends BaseUser {
+  // Add your custom user properties
+  avatar?: string;
+  status?: "online" | "away" | "offline";
+  // ... any other custom properties
+}
+
+interface Message extends BaseMessage {
+  // Add your custom message properties
+  isRead?: boolean;
+  attachments?: string[];
+  // ... any other custom properties
+}
+
+// Configuration types
 interface SocketConfig {
   socketUrl?: string;
   socketOptions?: any;
@@ -594,6 +612,57 @@ interface SocketContextType {
   createRoom: (roomName: string) => void;
   roomError: string;
 }
+```
+
+### Extending User Type Example
+
+To extend the User type with your own properties:
+
+```typescript
+// In your app's types file (e.g., types.ts)
+import { BaseUser } from "react-socketeer";
+
+declare module "react-socketeer" {
+  interface User extends BaseUser {
+    avatar: string;
+    role: "admin" | "user";
+    lastSeen: Date;
+  }
+}
+```
+
+Then use the extended type in your components:
+
+```typescript
+import { useSocket } from "react-socketeer";
+
+function UserList() {
+  const { users } = useSocket();
+
+  return (
+    <ul>
+      {users.map((user) => (
+        <li key={user.id}>
+          <img src={user.avatar} alt={user.username} />
+          <span>{user.username}</span>
+          <span>Role: {user.role}</span>
+          <span>Last seen: {user.lastSeen.toLocaleString()}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+You can also pass custom user data during login:
+
+```tsx
+const { handleLogin } = useSocket<MyUserExtension>();
+// Login with additional user data
+handleLogin(username, {
+  role: "admin",
+  avatar: "https://example.com/custom-avatar.png",
+});
 ```
 
 ## Configuration
@@ -657,8 +726,8 @@ For production deployments or multi-server setups, Socket.IO requires an adapter
   "adapter": {
     "type": "mongodb",
     "uri": "mongodb://localhost:27017",
-    "dbName": "socketio",        // Optional, defaults to "socketio"
-    "collection": "socket.io-adapter-events"  // Optional, defaults to "socket.io-adapter-events"
+    "dbName": "socketio", // Optional, defaults to "socketio"
+    "collection": "socket.io-adapter-events" // Optional, defaults to "socket.io-adapter-events"
   }
 }
 ```
@@ -808,3 +877,21 @@ MIT © Oke Edafe Great
 ---
 
 Made with ❤️ by the Socketeer team
+
+## Extending User Types
+
+You can extend the base User type with custom properties:
+
+```tsx
+const { handleLogin } = useSocket<MyUserExtension>();
+
+// Login with additional user data
+handleLogin(username, {
+  role: "admin",
+  avatar: "https://example.com/custom-avatar.png",
+});
+```
+
+This makes the library much more flexible for various use cases while maintaining type safety throughout your application.
+
+You can also pass custom user data during login:

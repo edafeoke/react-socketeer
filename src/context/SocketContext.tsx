@@ -3,19 +3,38 @@ import { Socket } from "socket.io-client";
 import { createSocket } from "../utils/socket";
 import { User, Message, SocketContextType, SocketProviderProps } from "../types";
 
-const SocketContext = createContext<SocketContextType | undefined>(undefined);
+// Make the context generic
+export const SocketContext = createContext<SocketContextType<any> | undefined>(undefined);
 
-export function SocketProvider({ socketUrl, socketOptions, children }: SocketProviderProps) {
+export function SocketProvider<T = {}>({ 
+  socketUrl, 
+  socketOptions, 
+  userDataTransformer,
+  children 
+}: SocketProviderProps<T>) {
   const socket = createSocket({ socketUrl, socketOptions });
   
   const [isConnected, setIsConnected] = useState<boolean>(socket.connected);
   const [username, setUsername] = useState<string>("");
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [users, setUsers] = useState<User[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [users, setUsers] = useState<User<T>[]>([]);
+  const [messages, setMessages] = useState<Message<T>[]>([]);
   const [loginError, setLoginError] = useState<string>("");
   const [rooms, setRooms] = useState<string[]>([]);
   const [roomError, setRoomError] = useState<string>("");
+
+  // Update login handler to accept additional user data
+  const handleLogin = (username: string, userData?: Partial<T>) => {
+    if (username.trim()) {
+      console.log("Attempting login with username:", username.trim());
+      // Emit login with additional user data if provided
+      socket.emit("login", {
+        username: username.trim(),
+        ...userData
+      });
+      setUsername(username.trim());
+    }
+  };
 
   useEffect(() => {
     function onConnect() {
@@ -29,18 +48,28 @@ export function SocketProvider({ socketUrl, socketOptions, children }: SocketPro
       setIsLoggedIn(false);
     }
 
-    function onInit(data: { users: User[], messages: Message[], rooms: string[] }) {
+    function onInit(data: { users: any[], messages: any[], rooms: string[] }) {
       console.log("Received init data:", data);
-      setUsers(data.users);
+      // Transform user data if transformer is provided
+      const transformedUsers = data.users.map(user => 
+        userDataTransformer ? { ...user, ...userDataTransformer(user) } : user
+      );
+      setUsers(transformedUsers);
       setMessages(data.messages);
       setRooms(data.rooms);
     }
 
-    function onLoginSuccess(user: User) {
+    function onLoginSuccess(user: any) {
       console.log("Login successful:", user);
+      
+      // Transform user data if transformer is provided
+      const transformedUser = userDataTransformer 
+        ? { ...user, ...userDataTransformer(user) } 
+        : user;
+        
       setIsLoggedIn(true);
       setLoginError("");
-      setUsers(prev => [...prev.filter(u => u.username !== user.username), user]);
+      setUsers(prev => [...prev.filter(u => u.username !== transformedUser.username), transformedUser]);
     }
 
     function onLoginError(error: string) {
@@ -48,7 +77,7 @@ export function SocketProvider({ socketUrl, socketOptions, children }: SocketPro
       setLoginError(error);
     }
 
-    function onUserJoined(user: User) {
+    function onUserJoined(user: User<T>) {
       console.log("User joined:", user);
       setUsers(prev => [...prev.filter(u => u.username !== user.username), user]);
     }
@@ -58,7 +87,7 @@ export function SocketProvider({ socketUrl, socketOptions, children }: SocketPro
       setUsers(prev => prev.filter(u => u.username !== user.username));
     }
 
-    function onNewMessage(message: Message) {
+    function onNewMessage(message: Message<T>) {
       console.log("New message received:", message);
       setMessages(prev => [...prev, message]);
     }
@@ -125,15 +154,7 @@ export function SocketProvider({ socketUrl, socketOptions, children }: SocketPro
       socket.off("connect_error", onSocketError);
       socket.off("error", onSocketError);
     };
-  }, [rooms, socket]);
-
-  const handleLogin = (username: string) => {
-    if (username.trim()) {
-      console.log("Attempting login with username:", username.trim());
-      socket.emit("login", username.trim());
-      setUsername(username.trim());
-    }
-  };
+  }, [socket, userDataTransformer]);
 
   const createRoom = (roomName: string) => {
     if (roomName.trim()) {
@@ -143,33 +164,34 @@ export function SocketProvider({ socketUrl, socketOptions, children }: SocketPro
     }
   };
 
+  const value: SocketContextType<T> = {
+    socket,
+    isConnected,
+    username,
+    setUsername,
+    isLoggedIn,
+    setIsLoggedIn,
+    users,
+    messages,
+    loginError,
+    handleLogin,
+    rooms,
+    createRoom,
+    roomError
+  };
+
   return (
-    <SocketContext.Provider
-      value={{
-        socket,
-        isConnected,
-        username,
-        setUsername,
-        isLoggedIn,
-        setIsLoggedIn,
-        users,
-        messages,
-        loginError,
-        handleLogin,
-        rooms,
-        createRoom,
-        roomError
-      }}
-    >
+    <SocketContext.Provider value={value}>
       {children}
     </SocketContext.Provider>
   );
 }
 
-export function useSocket() {
+// Make the useSocket hook generic as well
+export function useSocket<T = {}>() {
   const context = useContext(SocketContext);
   if (context === undefined) {
     throw new Error("useSocket must be used within a SocketProvider");
   }
-  return context;
+  return context as SocketContextType<T>;
 }

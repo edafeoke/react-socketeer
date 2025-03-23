@@ -9,6 +9,7 @@ import path from 'path'
 declare module 'socket.io' {
   interface Socket {
     username?: string;
+    userData?: any;
   }
 }
 
@@ -170,9 +171,15 @@ app.prepare().then(async () => {
   io.on('connection', (socket) => {
     console.log('Client connected:', socket.id)
 
-    socket.on('login', (username) => {
-      socket.username = username
-      io.emit('login_success', { username, id: socket.id })
+    socket.on('login', (userData) => {
+      if (typeof userData === 'object') {
+        socket.username = userData.username;
+        socket.userData = userData;
+        io.emit('login_success', { ...userData, id: socket.id });
+      } else {
+        socket.username = userData;
+        io.emit('login_success', { username: userData, id: socket.id });
+      }
     })
 
     socket.on('send_message', (message) => {
