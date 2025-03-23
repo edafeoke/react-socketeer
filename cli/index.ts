@@ -85,8 +85,28 @@ async function detectAppDirectory() {
   }
 }
 
+async function loadConfig() {
+  try {
+    const configPath = path.join(process.cwd(), 'react-socketeer.json');
+    const configExists = await fs.access(configPath).then(() => true).catch(() => false);
+    
+    if (configExists) {
+      const configData = await fs.readFile(configPath, 'utf8');
+      return JSON.parse(configData);
+    }
+    
+    return {};
+  } catch (error) {
+    console.warn('Warning: Could not load configuration file. Using defaults.');
+    return {};
+  }
+}
+
 async function setupNextjs(options: { packageManager?: string }) {
   try {
+    // Load user configuration
+    const config = await loadConfig();
+    
     // Create server file
     await createFile(
       path.join(process.cwd(), 'server.ts'),

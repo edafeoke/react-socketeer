@@ -57,7 +57,7 @@ yarn add react-socketeer socket.io-client
 ## Quick Start
 
 ```tsx
-import { SocketProvider, useGlobalChat } from "socketeer";
+import { SocketProvider, useGlobalChat } from "react-socketeer";
 
 // Wrap your app with the SocketProvider
 function App() {
@@ -82,6 +82,23 @@ function Chat() {
       <button onClick={() => sendMessage("Hello, world!")}>Send Message</button>
     </div>
   );
+}
+```
+
+### TypeScript Configuration
+
+The library is written in TypeScript and includes built-in type definitions. For optimal TypeScript support, ensure your `tsconfig.json` includes:
+
+```json
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "es6",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "jsx": "react-jsx"
+  }
 }
 ```
 
@@ -172,22 +189,34 @@ httpServer.listen(4000, () => {
 
 ## Next.js Integration
 
+### Version Compatibility
+
+- Next.js 13.x or later (App Router)
+- Next.js 12.x (Pages Router) - requires manual setup
+
 ### Automatic Setup (Recommended)
 
 The easiest way to integrate react-socketeer with Next.js is using our CLI tool:
 
 ```bash
+# Install the library
 npm install react-socketeer socket.io-client
-Run the setup command
-npx react-socketeer setup-nextjs
+
+# Run the setup command
+npx react-socketeer setup-nextjs [options]
 ```
 
-This will automatically:
+Available options:
+- `-p, --package-manager <manager>`: Specify package manager (npm, yarn, or pnpm)
 
-1. Create a custom server with Socket.IO integration
-2. Set up necessary components and configurations
-3. Install required dependencies
-4. Update your package.json scripts
+The CLI tool will automatically:
+
+1. Detect your project structure (src/app or app directory)
+2. Detect your package manager (npm, yarn, or pnpm)
+3. Create a custom server with Socket.IO integration
+4. Set up necessary components and configurations
+5. Install required dependencies
+6. Update your package.json scripts
 
 After the setup completes, update your `app/layout.tsx`:
 
@@ -338,7 +367,6 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   );
 }
 ```
-
 
 6. Update your layout and create pages as shown in the automatic setup section.
 
@@ -570,6 +598,12 @@ interface SocketContextType {
 
 ## Configuration
 
+### Environment Variables
+
+- `NEXT_PUBLIC_SOCKET_URL`: Socket server URL (default: http://localhost:3000)
+- `PORT`: Server port (default: 3000)
+- `NODE_ENV`: Environment mode (development/production)
+
 ### Socket.IO Options
 
 You can pass any Socket.IO client options through the `socketOptions` prop of `SocketProvider`:
@@ -587,6 +621,72 @@ You can pass any Socket.IO client options through the `socketOptions` prop of `S
 >
   {children}
 </SocketProvider>
+```
+
+### Adapter Configuration
+
+For production deployments or multi-server setups, Socket.IO requires an adapter to synchronize events between multiple Socket.IO server instances. Configure adapters using a `react-socketeer.json` file in your project root.
+
+#### Available Adapters
+
+- **Redis Adapter**: Synchronizes Socket.IO instances using Redis pub/sub
+- **MongoDB Adapter**: Uses MongoDB for event storage and synchronization
+- **Custom Adapters**: Implement your own adapter integration
+
+#### Configuration Examples
+
+**Redis Adapter**:
+
+```json
+{
+  "adapter": {
+    "type": "redis",
+    "options": {
+      "url": "redis://localhost:6379",
+      "username": "optional-username",
+      "password": "optional-password"
+    }
+  }
+}
+```
+
+**MongoDB Adapter**:
+
+```json
+{
+  "adapter": {
+    "type": "mongodb",
+    "uri": "mongodb://localhost:27017",
+    "dbName": "socketio",        // Optional, defaults to "socketio"
+    "collection": "socket.io-adapter-events"  // Optional, defaults to "socket.io-adapter-events"
+  }
+}
+```
+
+**Custom Adapter**:
+
+```json
+{
+  "adapter": {
+    "type": "custom",
+    "setupFunction": "./adapters/custom-adapter.js",
+    "options": {
+      // Your custom options here
+    }
+  }
+}
+```
+
+#### Installing Adapter Dependencies
+
+Depending on your adapter choice, install the required dependencies:
+
+```bash
+# For Redis adapter
+npm install @socket.io/redis-adapter redis
+
+# For MongoDB adapter
+npm install @socket.io/mongo-adapter mongodb
 ```
 
 ## Troubleshooting
