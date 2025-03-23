@@ -15,7 +15,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 export const chatComponentTemplate = `'use client'
 
 import { useState } from 'react'
-import { useSocket, useGlobalChat } from 'react-socketeer'
+import { useSocket } from 'react-socketeer'
 
 export function LoginForm() {
   const { handleLogin, loginError } = useSocket()
@@ -43,13 +43,13 @@ export function LoginForm() {
 }
 
 export function ChatRoom() {
-  const { messages, sendMessage } = useGlobalChat()
+  const { messages, socket } = useSocket()
   const [newMessage, setNewMessage] = useState('')
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault()
     if (newMessage.trim()) {
-      sendMessage(newMessage)
+      socket.emit('send_message', newMessage)
       setNewMessage('')
     }
   }

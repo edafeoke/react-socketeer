@@ -8,14 +8,14 @@ const SocketContext = createContext<SocketContextType | undefined>(undefined);
 export function SocketProvider({ socketUrl, socketOptions, children }: SocketProviderProps) {
   const socket = createSocket({ socketUrl, socketOptions });
   
-  const [isConnected, setIsConnected] = useState(socket.connected);
-  const [username, setUsername] = useState("");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isConnected, setIsConnected] = useState<boolean>(socket.connected);
+  const [username, setUsername] = useState<string>("");
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [users, setUsers] = useState<User[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [loginError, setLoginError] = useState("");
+  const [loginError, setLoginError] = useState<string>("");
   const [rooms, setRooms] = useState<string[]>([]);
-  const [roomError, setRoomError] = useState("");
+  const [roomError, setRoomError] = useState<string>("");
 
   useEffect(() => {
     function onConnect() {
