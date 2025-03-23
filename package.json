@@ -1,6 +1,6 @@
 {
   "name": "react-socketeer",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "A React library for socket.io integration with rooms, private messaging, and user management/authentication",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
