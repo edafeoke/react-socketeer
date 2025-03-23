@@ -12,6 +12,16 @@ declare module 'socket.io' {
   }
 }
 
+// Check if module exists without importing it
+async function moduleExists(moduleName: string): Promise<boolean> {
+  try {
+    require.resolve(moduleName);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 // Load configuration if exists
 async function loadAdapterConfig() {
   try {
@@ -24,6 +34,85 @@ async function loadAdapterConfig() {
   } catch (error) {
     console.warn('Warning: Error loading adapter config:', error);
     return null;
+  }
+}
+
+// Setup Redis adapter if available
+async function setupRedisAdapter(io: SocketIOServer, config: any) {
+  if (!await moduleExists('@socket.io/redis-adapter') || !await moduleExists('redis')) {
+    console.error('Redis adapter packages not found. Please install:');
+    console.error('npm install @socket.io/redis-adapter redis');
+    return false;
+  }
+  
+  try {
+    // These imports are only executed if the modules exist
+    const redisAdapter = await import('@socket.io/redis-adapter');
+    const redis = await import('redis');
+    
+    const pubClient = redis.createClient(config.options || {});
+    const subClient = pubClient.duplicate();
+    
+    await Promise.all([pubClient.connect(), subClient.connect()]);
+    io.adapter(redisAdapter.createAdapter(pubClient, subClient));
+    
+    console.log('Redis adapter set up successfully');
+    return true;
+  } catch (error) {
+    console.error('Failed to set up Redis adapter:', error);
+    return false;
+  }
+}
+
+// Setup MongoDB adapter if available
+async function setupMongoAdapter(io: SocketIOServer, config: any) {
+  if (!await moduleExists('@socket.io/mongo-adapter') || !await moduleExists('mongodb')) {
+    console.error('MongoDB adapter packages not found. Please install:');
+    console.error('npm install @socket.io/mongo-adapter mongodb');
+    return false;
+  }
+  
+  try {
+    // These imports are only executed if the modules exist
+    const mongoAdapter = await import('@socket.io/mongo-adapter');
+    const mongodb = await import('mongodb');
+    
+    const mongoClient = new mongodb.MongoClient(config.uri);
+    await mongoClient.connect();
+    
+    const mongoCollection = mongoClient
+      .db(config.dbName || 'socketio')
+      .collection(config.collection || 'socket.io-adapter-events');
+    
+    io.adapter(mongoAdapter.createAdapter(mongoCollection));
+    console.log('MongoDB adapter set up successfully');
+    return true;
+  } catch (error) {
+    console.error('Failed to set up MongoDB adapter:', error);
+    return false;
+  }
+}
+
+// Setup custom adapter if available
+async function setupCustomAdapter(io: SocketIOServer, config: any) {
+  if (!config.setupFunction) {
+    console.error('Custom adapter missing setupFunction path');
+    return false;
+  }
+  
+  try {
+    if (!await moduleExists(config.setupFunction)) {
+      console.error('Custom adapter setup module not found:', config.setupFunction);
+      return false;
+    }
+    
+    const setupModule = await import(config.setupFunction);
+    await setupModule.default(io, config);
+    console.log('Custom adapter set up successfully');
+    return true;
+  } catch (error) {
+    console.error('Failed to set up custom adapter:', error);
+    return false;
   }
 }
 
@@ -57,60 +146,21 @@ app.prepare().then(async () => {
   // Set up adapter if configured
   const adapterConfig = await loadAdapterConfig();
   if (adapterConfig) {
-    try {
-      console.log(\`Setting up \${adapterConfig.type} adapter...\`);
-      
-      if (adapterConfig.type === 'redis') {
-        try {
-          const { createAdapter } = await import('@socket.io/redis-adapter');
-          const { createClient } = await import('redis');
-          
-          const pubClient = createClient(adapterConfig.options || {});
-          const subClient = pubClient.duplicate();
-          
-          await Promise.all([pubClient.connect(), subClient.connect()]);
-          io.adapter(createAdapter(pubClient, subClient));
-          
-          console.log('Redis adapter set up successfully');
-        } catch (error) {
-          console.error('Failed to set up Redis adapter:', error);
-          console.warn('Make sure you have installed required dependencies:');
-          console.warn('npm install @socket.io/redis-adapter redis');
-        }
-      } 
-      else if (adapterConfig.type === 'mongo' || adapterConfig.type === 'mongodb') {
-        try {
-          const { createAdapter } = await import('@socket.io/mongo-adapter');
-          const { MongoClient } = await import('mongodb');
-          
-          const mongoClient = new MongoClient(adapterConfig.uri);
-          await mongoClient.connect();
-          
-          const mongoCollection = mongoClient
-            .db(adapterConfig.dbName || 'socketio')
-            .collection(adapterConfig.collection || 'socket.io-adapter-events');
-          
-          io.adapter(createAdapter(mongoCollection));
-          console.log('MongoDB adapter set up successfully');
-        } catch (error) {
-          console.error('Failed to set up MongoDB adapter:', error);
-          console.warn('Make sure you have installed required dependencies:');
-          console.warn('npm install @socket.io/mongo-adapter mongodb');
-        }
-      }
-      else if (adapterConfig.type === 'custom' && adapterConfig.setupFunction) {
-        try {
-          // For custom adapters, users can provide a setupFunction path
-          const setupModule = await import(adapterConfig.setupFunction);
-          await setupModule.default(io, adapterConfig);
-          console.log('Custom adapter set up successfully');
-        } catch (error) {
-          console.error('Failed to set up custom adapter:', error);
-          console.warn('Make sure your setup function and dependencies are correctly configured');
-        }
-      }
-    } catch (error) {
-      console.error('Failed to set up adapter:', error);
+    let adapterSetupSuccess = false;
+    
+    console.log(\`Setting up \${adapterConfig.type} adapter...\`);
+    
+    if (adapterConfig.type === 'redis') {
+      adapterSetupSuccess = await setupRedisAdapter(io, adapterConfig);
+    } 
+    else if (adapterConfig.type === 'mongo' || adapterConfig.type === 'mongodb') {
+      adapterSetupSuccess = await setupMongoAdapter(io, adapterConfig);
+    }
+    else if (adapterConfig.type === 'custom') {
+      adapterSetupSuccess = await setupCustomAdapter(io, adapterConfig);
+    }
+    
+    if (!adapterSetupSuccess) {
       console.warn('Falling back to in-memory adapter');
     }
   } else {
