@@ -8,7 +8,6 @@ A powerful React library for Socket.IO integration that provides seamless real-t
 ## Table of Contents
 
 - [Features](#features)
-- [Dependencies](#dependencies)
 - [Installation](#installation)
 - [Local Development](#local-development)
 - [Quick Start](#quick-start)
@@ -32,19 +31,6 @@ A powerful React library for Socket.IO integration that provides seamless real-t
 - 🔄 Automatic reconnection handling
 - 🎯 TypeScript support
 - ⚡ Modern React Hooks API
-
-## Dependencies
-
-### Peer Dependencies
-
-- React >=16.8.0
-- Socket.IO Client >=4.0.0
-
-### Development Dependencies
-
-- TypeScript ^5.0.0
-- Rollup ^3.0.0
-- Jest ^29.0.0
 
 ## Installation
 
@@ -665,6 +651,7 @@ handleLogin(username, {
 });
 ```
 
+
 ## Configuration
 
 ### Environment Variables
@@ -877,21 +864,3 @@ MIT © Oke Edafe Great
 ---
 
 Made with ❤️ by the Socketeer team
-
-## Extending User Types
-
-You can extend the base User type with custom properties:
-
-```tsx
-const { handleLogin } = useSocket<MyUserExtension>();
-
-// Login with additional user data
-handleLogin(username, {
-  role: "admin",
-  avatar: "https://example.com/custom-avatar.png",
-});
-```
-
-This makes the library much more flexible for various use cases while maintaining type safety throughout your application.
-
-You can also pass custom user data during login:
