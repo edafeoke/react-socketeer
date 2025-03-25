@@ -22,6 +22,7 @@ export function SocketProvider<T = {}>({
   const [loginError, setLoginError] = useState<string>("");
   const [rooms, setRooms] = useState<string[]>([]);
   const [roomError, setRoomError] = useState<string>("");
+  const [userData, setUserData] = useState<T | null>(null);
 
   // Update login handler to accept additional user data
   const handleLogin = (username: string, userData?: Partial<T>) => {
@@ -33,6 +34,7 @@ export function SocketProvider<T = {}>({
         ...userData
       });
       setUsername(username.trim());
+      setUserData(userData as T);
     }
   };
 
@@ -177,7 +179,8 @@ export function SocketProvider<T = {}>({
     handleLogin,
     rooms,
     createRoom,
-    roomError
+    roomError,
+    userData
   };
 
   return (

@@ -1,11 +1,18 @@
 // Export context and hooks
 export { SocketProvider, useSocket } from './context/SocketContext';
+export { useGlobalChat } from './hooks/useGlobalChat';
 export { useRoom } from './hooks/useRoom';
 export { usePrivateChat } from './hooks/usePrivateChat';
-export { useGlobalChat } from './hooks/useGlobalChat';
 
 // Export utils
 export { createSocket, getSocket } from './utils/socket';
 
 // Export types
-export * from './types';
+export type {
+  BaseUser,
+  User,
+  Message,
+  SocketConfig,
+  SocketContextType,
+  SocketProviderProps
+} from './types';
