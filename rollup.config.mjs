@@ -17,18 +17,24 @@ export default [
         file: packageJson.main,
         format: 'cjs',
         sourcemap: true,
+        exports: 'named'
       },
       {
         file: packageJson.module,
         format: 'esm',
         sourcemap: true,
+        exports: 'named'
       },
     ],
     plugins: [
       peerDepsExternal(),
       resolve(),
       commonjs(),
-      typescript({ tsconfig: './tsconfig.json' }),
+      typescript({ 
+        tsconfig: './tsconfig.json',
+        declaration: true,
+        declarationDir: './dist/types'
+      }),
       terser(),
     ],
     external: ['react', 'react-dom', 'socket.io-client'],

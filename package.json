@@ -9,6 +9,14 @@
     "dist"
   ],
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "rollup -c rollup.config.mjs && chmod +x dist/cli/index.js",
     "dev": "rollup -c rollup.config.mjs -w",
