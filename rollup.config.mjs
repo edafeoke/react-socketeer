@@ -17,7 +17,8 @@ export default [
         file: packageJson.main,
         format: 'cjs',
         sourcemap: true,
-        exports: 'named'
+        exports: 'named',
+        name: 'ReactSocketeer'
       },
       {
         file: packageJson.module,
@@ -28,12 +29,15 @@ export default [
     ],
     plugins: [
       peerDepsExternal(),
-      resolve(),
+      resolve({
+        extensions: ['.ts', '.tsx']
+      }),
       commonjs(),
       typescript({ 
         tsconfig: './tsconfig.json',
         declaration: true,
-        declarationDir: './dist/types'
+        declarationDir: './dist/types',
+        exclude: ['**/__tests__/**']
       }),
       terser(),
     ],
@@ -41,7 +45,10 @@ export default [
   },
   {
     input: 'dist/types/index.d.ts',
-    output: [{ file: 'dist/index.d.ts', format: 'esm' }],
+    output: [{ 
+      file: 'dist/index.d.ts', 
+      format: 'esm'
+    }],
     plugins: [dts()],
   },
   {
