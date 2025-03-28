@@ -166,6 +166,36 @@ export function SocketProvider<T = {}>({
     }
   };
 
+  const updateUserData = (key: string, value: any) => {
+    if (!isLoggedIn || !userData) {
+      console.warn("Cannot update user data: User not logged in");
+      return false;
+    }
+
+    try {
+      // Update local userData state with the new key-value pair
+      const updatedUserData = {
+        ...userData,
+        [key]: value
+      };
+      
+      setUserData(updatedUserData as T);
+      
+      // Emit event to server so other clients get the update
+      socket.emit("update_user_data", {
+        username,
+        key,
+        value
+      });
+      
+      console.log(`User data updated: ${key} = ${value}`);
+      return true;
+    } catch (error) {
+      console.error("Error updating user data:", error);
+      return false;
+    }
+  };
+
   const value: SocketContextType<T> = {
     socket,
     isConnected,
@@ -180,7 +210,8 @@ export function SocketProvider<T = {}>({
     rooms,
     createRoom,
     roomError,
-    userData
+    userData,
+    updateUserData
   };
 
   return (

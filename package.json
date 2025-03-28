@@ -26,6 +26,9 @@
     "prepublishOnly": "npm run build"
   },
   "keywords": [
+    "react-socketeer",
+    "react socketeer",
+    "react realtime chat",
     "socket.io",
     "react",
     "websocket",
