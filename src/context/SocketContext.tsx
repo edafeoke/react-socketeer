@@ -196,6 +196,16 @@ export function SocketProvider<T = {}>({
     }
   };
 
+  const updateUserDataState = (data: T | null) => {
+    setUserData(data);
+    if (data && isLoggedIn) {
+      socket.emit("update_user_data", {
+        username,
+        data
+      });
+    }
+  };
+
   const value: SocketContextType<T> = {
     socket,
     isConnected,
@@ -211,6 +221,7 @@ export function SocketProvider<T = {}>({
     createRoom,
     roomError,
     userData,
+    setUserData: updateUserDataState,
     updateUserData
   };
 

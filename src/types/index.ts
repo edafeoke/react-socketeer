@@ -39,7 +39,8 @@ export interface SocketContextType<UserExtension = {}> {
   createRoom: (roomName: string) => void;
   roomError: string;
   userData: UserExtension | null;
-  updateUserData: (key: string, value: string)=>void
+  setUserData: (data: UserExtension | null) => void;
+  updateUserData: (key: string, value: any) => boolean;
 }
 
 // Update provider props to support generic extensions
