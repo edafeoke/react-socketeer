@@ -9,6 +9,10 @@ A powerful React library for Socket.IO integration with built-in real-time commu
 - [Quick Start](#quick-start)
   - [1. Wrap your app with SocketProvider](#1-wrap-your-app-with-socketprovider)
   - [2. Use hooks in your components](#2-use-hooks-in-your-components)
+- [Next.js Integration](#nextjs-integration)
+  - [Installation for Next.js](#installation-for-nextjs)
+  - [Setting up the Socket Server](#setting-up-the-socket-server)
+  - [Client-Side Integration](#client-side-integration)
 - [Core Features](#core-features)
   - [Type-Safe User Data](#type-safe-user-data)
   - [Available Hooks](#available-hooks)
@@ -112,6 +116,186 @@ setUserData({
 2. **useGlobalChat()** - Global messaging
 3. **usePrivateChat()** - Direct messaging
 4. **useRoom()** - Room-based communication
+
+## Next.js Integration
+
+### Installation for Next.js
+
+```bash
+npm install react-socketeer socket.io-client socket.io
+# or
+yarn add react-socketeer socket.io-client socket.io
+# or
+pnpm add react-socketeer socket.io-client socket.io
+```
+
+### Setting up the Socket Server
+
+Create a custom server file in your Next.js project:
+
+```typescript
+// server.ts
+import { createServer } from 'http'
+import { parse } from 'url'
+import next from 'next'
+import { Server as SocketIOServer } from 'socket.io'
+
+const dev = process.env.NODE_ENV !== 'production'
+const app = next({ dev })
+const handle = app.getRequestHandler()
+
+app.prepare().then(() => {
+  const server = createServer((req, res) => {
+    const parsedUrl = parse(req.url!, true)
+    handle(req, res, parsedUrl)
+  })
+  
+  const io = new SocketIOServer(server, {
+    cors: {
+      origin: '*',
+      methods: ['GET', 'POST']
+    }
+  })
+  
+  io.on('connection', (socket) => {
+    console.log('Client connected')
+    
+    socket.on('login', (username) => {
+      socket.username = username
+      io.emit('user_joined', { username })
+    })
+    
+    socket.on('send_message', (message) => {
+      io.emit('new_message', {
+        username: socket.username,
+        text: message,
+        timestamp: Date.now()
+      })
+    })
+    
+    socket.on('disconnect', () => {
+      console.log('Client disconnected')
+    })
+  })
+  
+  server.listen(3000, () => {
+    console.log('> Ready on http://localhost:3000')
+  })
+})
+```
+
+Update your `package.json` to use the custom server:
+
+```json
+"scripts": {
+  "dev": "ts-node --project tsconfig.server.json server.ts",
+  "build": "next build",
+  "start": "NODE_ENV=production ts-node --project tsconfig.server.json server.ts"
+}
+```
+
+### Client-Side Integration
+
+Create a SocketProvider component in your Next.js app:
+
+```tsx
+// app/providers.tsx
+'use client'
+
+import { SocketProvider as BaseSocketProvider } from 'react-socketeer'
+
+export function SocketProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <BaseSocketProvider 
+      socketUrl={process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000'}
+    >
+      {children}
+    </BaseSocketProvider>
+  )
+}
+```
+
+Wrap your app with the provider in your layout:
+
+```tsx
+// app/layout.tsx
+import { SocketProvider } from './providers'
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <SocketProvider>
+          {children}
+        </SocketProvider>
+      </body>
+    </html>
+  )
+}
+```
+
+Use the hooks in your client components:
+
+```tsx
+// app/chat.tsx
+'use client'
+
+import { useState } from 'react'
+import { useSocket, useGlobalChat } from 'react-socketeer'
+
+export default function ChatComponent() {
+  const { isConnected, handleLogin } = useSocket()
+  const { messages, sendMessage } = useGlobalChat()
+  const [username, setUsername] = useState('')
+  const [message, setMessage] = useState('')
+  
+  const handleLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (username) handleLogin(username)
+  }
+  
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (message) {
+      sendMessage(message)
+      setMessage('')
+    }
+  }
+  
+  return (
+    <div>
+      {!isConnected ? (
+        <form onSubmit={handleLoginSubmit}>
+          <input 
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Enter username"
+          />
+          <button type="submit">Join Chat</button>
+        </form>
+      ) : (
+        <div>
+          <div>
+            {messages.map((msg, i) => (
+              <div key={i}>
+                <strong>{msg.username}:</strong> {msg.text}
+              </div>
+            ))}
+          </div>
+          <form onSubmit={handleSendMessage}>
+            <input
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Type a message"
+            />
+            <button type="submit">Send</button>
+          </form>
+        </div>
+      )}
+    </div>
+  )
+}
+```
 
 ## Advanced Usage
 
