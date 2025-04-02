@@ -129,6 +129,11 @@ yarn add react-socketeer socket.io-client socket.io
 pnpm add react-socketeer socket.io-client socket.io
 ```
 
+```bash
+# Run the setup command
+npx react-socketeer setup-nextjs [options]
+```
+
 ### Setting up the Socket Server
 
 Create a custom server file in your Next.js project:
