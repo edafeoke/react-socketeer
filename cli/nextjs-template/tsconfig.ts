@@ -3,8 +3,9 @@ export const tsconfigServerTemplate = `{
   "compilerOptions": {
     "module": "commonjs",
     "outDir": "dist",
-    "noEmit": false,
-    "jsx": "react"
+    "target": "es2017",
+    "isolatedModules": false,
+    "noEmit": false
   },
   "include": ["server.ts"]
 }`

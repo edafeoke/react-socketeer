@@ -111,8 +111,16 @@ export function SocketProvider<T = {}>({
       setRoomError(error);
     }
 
-    function onSocketError(error: any) {
+    function onSocketError(error: Error | string) {
       console.error("Socket error:", error);
+      // Notify user about connection issues
+      setLoginError(typeof error === 'string' ? error : 'Connection error. Please try again later.');
+      
+      // Attempt to reconnect if disconnected
+      if (!socket.connected) {
+        console.log("Attempting to reconnect...");
+        socket.connect();
+      }
     }
 
     // Register event handlers

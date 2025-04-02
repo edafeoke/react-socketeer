@@ -56,7 +56,15 @@ async function installDependencies(packageManager: string) {
 
   const command = commands[packageManager] || commands.npm;
   console.log(`Installing with ${packageManager}...`);
-  execSync(command, { stdio: 'inherit' });
+  
+  try {
+    execSync(command, { stdio: 'inherit' });
+    console.log('✅ Dependencies installed successfully');
+  } catch (error) {
+    console.error('Failed to install dependencies. You may need to install them manually:');
+    console.error(`${packageManager} install ${dependencies} --save-dev`);
+    // Continue with setup despite dependency installation failure
+  }
 }
 
 async function detectAppDirectory() {
@@ -92,7 +100,12 @@ async function loadConfig() {
     
     if (configExists) {
       const configData = await fs.readFile(configPath, 'utf8');
-      return JSON.parse(configData);
+      try {
+        return JSON.parse(configData);
+      } catch (parseError) {
+        console.error('Error: Invalid JSON in configuration file. Please check the format.');
+        return {};
+      }
     }
     
     return {};
@@ -222,7 +235,11 @@ app.prepare().then(async () => {
     const { createAdapter } = require('@socket.io/mongo-adapter');
     const { MongoClient } = require('mongodb');
     
-    const mongoClient = new MongoClient('${config.adapter.uri}');
+    // In the generateServerTemplate function, replace the MongoDB connection with:
+    const mongoClient = new MongoClient(${JSON.stringify(config.adapter.uri)});
+    
+    // And for Redis:
+    const pubClient = createClient(${JSON.stringify(config.adapter.options || {})});
     mongoClient.connect().then(() => {
       const mongoCollection = mongoClient
         .db('${config.adapter.dbName || 'socketio'}')
